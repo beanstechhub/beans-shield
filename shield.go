@@ -57,9 +57,11 @@ type Rule struct {
 }
 
 type Shield struct {
-	velocity  *VelocityCounter
-	rules     []Rule
-	persister Persister
+	velocity     *VelocityCounter
+	rules        []Rule
+	persister    Persister
+	scorer       Scorer
+	scorerWeight float64
 }
 
 type Option func(*Shield)
@@ -100,6 +102,12 @@ func (s *Shield) Evaluate(ctx context.Context, tx *Transaction) Result {
 			}
 			score += riskWeight(risk)
 		}
+	}
+
+	if s.scorer != nil {
+		features := ExtractFeatures(tx, s.velocity)
+		mlScore := s.scorer.Score(features)
+		score = blendScores(score, mlScore, s.scorerWeight)
 	}
 
 	s.velocity.Record(fmt.Sprintf("user:%s:tx", tx.UserID), tx.Amount)
