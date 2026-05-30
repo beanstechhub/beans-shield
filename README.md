@@ -1,22 +1,62 @@
 # beans-shield
 
-**Real-time transaction fraud detection engine for fintechs.** Zero external dependencies. Built for Pix, crypto, betting, and e-commerce.
+**Security toolkit for financial infrastructure:** real-time fraud detection + vulnerability scanner for Go codebases.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/beanstech/beans-shield.svg)](https://pkg.go.dev/github.com/beanstech/beans-shield)
 [![Go Report Card](https://goreportcard.com/badge/github.com/beanstech/beans-shield)](https://goreportcard.com/report/github.com/beanstech/beans-shield)
 
 ---
 
+## Two Engines, One Mission
+
+beans-shield protects financial software at two levels:
+
+### 1. Runtime Fraud Detection
+Real-time transaction scoring for Pix, crypto, and betting — sub-50μs decisions with rules + ML hybrid scoring.
+
+### 2. Code Vulnerability Scanner
+Static analysis + AI-powered deep scanning for Go codebases. Finds SQL injection, hardcoded secrets, weak crypto, race conditions, auth bypasses, and more.
+
+```bash
+# Scan any Go project for vulnerabilities
+go run github.com/beanstech/beans-shield/examples/scan@latest ./my-fintech-api
+```
+
+```
+beans-shield scanner: 2 findings in 106 files
+  Critical: 1 | High: 1 | Medium: 0 | Low: 0
+
+[1] Potential SQL injection via string concatenation (critical)
+    File: internal/repository/vehicle.go:144
+    CWE: CWE-89
+    Fix: Use parameterized queries with $1, $2 placeholders.
+
+[2] Hardcoded secret in source code (high)
+    File: internal/config/config.go:58
+    CWE: CWE-798
+    Fix: Load secrets from environment variables or a secret manager.
+```
+
+---
+
 ## Why beans-shield?
 
-Most fraud detection solutions are expensive SaaS black boxes. If you're a fintech in Latin America processing Pix, crypto swaps, or betting deposits, you need:
+Most security tools are either:
+- **Expensive SaaS** (Snyk, Checkmarx, Featurespace) — $50k+/year
+- **Generic** — not tuned for financial infrastructure patterns
+- **Closed source** — can't audit, can't extend, can't trust
 
-- **Sub-millisecond decisions** — can't add latency to real-time payments
-- **Rules you can read and audit** — regulators (BACEN, COAF) want explainability
-- **No vendor lock-in** — your fraud logic shouldn't live in someone else's cloud
-- **Sector-specific intelligence** — betting fraud ≠ e-commerce fraud
+beans-shield is open-source, Go-native, zero-dependency, and built specifically for financial software.
 
-beans-shield gives you all of this in ~500 lines of Go with zero dependencies.
+### For fintech developers:
+- Sub-millisecond fraud decisions without vendor lock-in
+- Explainable rules for BACEN/COAF compliance
+- Sector-specific intelligence (betting, crypto, e-commerce)
+
+### For security teams:
+- AST-based static analysis with CWE mappings
+- AI-powered deep scanning via Claude API (optional)
+- CI/CD integration — exit code 2 on critical/high findings
 
 ---
 
@@ -201,30 +241,85 @@ beans-shield was built to satisfy:
 
 ---
 
+## Vulnerability Scanner
+
+### Static Analysis (8 built-in rules)
+
+| ID | Rule | Severity | CWE |
+|----|------|----------|-----|
+| BSEC-001 | SQL Injection (string concat) | Critical | CWE-89 |
+| BSEC-002 | Hardcoded Secrets | High | CWE-798 |
+| BSEC-003 | Weak Cryptography (MD5, SHA1, DES, RC4) | High | CWE-327 |
+| BSEC-004 | Command Injection (exec.Command) | Critical | CWE-78 |
+| BSEC-005 | Race Conditions (goroutine + pkg var) | Medium | CWE-362 |
+| BSEC-006 | Unvalidated Redirects | Medium | CWE-601 |
+| BSEC-007 | Insecure TLS (skip verify, old versions) | High | CWE-295/326 |
+| BSEC-008 | Error Information Leak | Low | CWE-209 |
+
+### AI-Powered Deep Scan (optional)
+
+For complex vulnerabilities that static analysis can't catch (logic flaws, auth bypasses, TOCTOU):
+
+```go
+import "github.com/beanstech/beans-shield/scanner"
+
+s := scanner.New()
+ai := scanner.NewAIScannerFromEnv() // uses ANTHROPIC_API_KEY
+
+staticResult, aiFindings, _ := ai.DeepScan(ctx, s, "./my-project")
+```
+
+The AI scanner uses Claude to reason about code semantics — finding multi-step vulnerabilities that survive years of manual review and millions of automated tests.
+
+### CI/CD Integration
+
+```yaml
+# GitHub Actions
+- name: Security Scan
+  run: |
+    go run github.com/beanstech/beans-shield/examples/scan@latest .
+  env:
+    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # optional, for deep scan
+```
+
+Exit codes: `0` = clean, `2` = critical/high findings.
+
+---
+
 ## Architecture
 
 ```
 beans-shield/
-├── shield.go       # Core engine: Shield, VelocityCounter, Evaluate()
-├── rules.go        # Built-in global rules (configurable thresholds)
-├── merchant.go     # Multi-merchant evaluation + MerchantConfig
-├── betting.go      # Betting-sector specific rules
-├── shield_test.go  # Unit tests for core engine
-├── merchant_test.go # Unit tests for merchant rules
+├── shield.go          # Core fraud engine
+├── rules.go           # Configurable fraud rules
+├── features.go        # ML feature extraction (14 features)
+├── model.go           # Scorer interface + hybrid blending
+├── merchant.go        # Multi-merchant evaluation
+├── betting.go         # Betting-sector fraud rules
+├── scanner/
+│   ├── scanner.go     # Vulnerability scanner engine
+│   ├── rules.go       # 8 static analysis rules (AST-based)
+│   └── ai.go          # Claude-powered deep analysis
+├── models/            # Trained ML model (ONNX + LightGBM)
+├── scripts/train.py   # Model training pipeline
 └── examples/
-    └── basic/main.go
+    ├── basic/         # Fraud detection example
+    └── scan/          # Vulnerability scanner CLI
 ```
 
 ---
 
 ## Roadmap
 
-- [ ] Redis-backed VelocityCounter (for distributed deployments)
-- [ ] E-commerce sector rules
-- [ ] Crypto/DeFi sector rules
-- [ ] ML score integration (hybrid rules + model)
+- [x] ~~ML score integration (hybrid rules + model)~~
+- [x] ~~Vulnerability scanner with CWE mappings~~
+- [x] ~~AI-powered deep scanning via Claude~~
+- [ ] Redis-backed VelocityCounter (distributed deployments)
+- [ ] E-commerce and Crypto/DeFi sector rules
+- [ ] SARIF output format for GitHub Security tab
+- [ ] Multi-language support (TypeScript, Python, Rust)
 - [ ] OpenTelemetry metrics export
-- [ ] WASM build for edge evaluation
+- [ ] CVE database correlation
 
 ---
 
