@@ -1,0 +1,65 @@
+{
+  "model_version": "1.0.0",
+  "trained_at": "2026-05-24",
+  "feature_names": [
+    "amount_normalized",
+    "hour_sin",
+    "hour_cos",
+    "is_pix_out",
+    "is_pix_in",
+    "is_withdrawal",
+    "is_swap",
+    "is_crypto_buy",
+    "velocity_count_1h",
+    "velocity_count_24h",
+    "velocity_amount_24h",
+    "is_new_destination",
+    "is_unusual_hour",
+    "amount_vs_avg_24h"
+  ],
+  "optimal_threshold": 0.21098835697313312,
+  "metrics": {
+    "auc": 0.7849104531123449,
+    "precision": 0.6029411764705882,
+    "recall": 0.5394736842105263,
+    "f1": 0.5694444444444444,
+    "false_positive_rate": 0.015497808390732623
+  },
+  "feature_importance": {
+    "is_new_destination": 224974.07958984375,
+    "amount_vs_avg_24h": 136498.01977166126,
+    "amount_normalized": 12646.192076348409,
+    "velocity_amount_24h": 12251.224237861585,
+    "is_withdrawal": 10829.12213897705,
+    "hour_cos": 5946.010716315141,
+    "is_unusual_hour": 4390.919128417969,
+    "velocity_count_1h": 3540.8479800224304,
+    "velocity_count_24h": 2649.679326625046,
+    "hour_sin": 2614.6659722328186,
+    "is_pix_out": 1548.978547396866,
+    "is_pix_in": 918.5338897705078,
+    "is_crypto_buy": 182.68099975585938,
+    "is_swap": 11.012200355529785
+  },
+  "threshold_scorer_config": {
+    "description": "Simple threshold-based scorer for Go ThresholdScorer",
+    "amount_threshold": 0.5,
+    "velocity_threshold": 5.0,
+    "weights": {
+      "is_new_destination": 0.5369284574688516,
+      "amount_vs_avg_24h": 0.3257694012446556,
+      "amount_normalized": 0.030181701006568303,
+      "velocity_amount_24h": 0.02923906142490998,
+      "is_withdrawal": 0.025845038932588337,
+      "hour_cos": 0.014190889758610556,
+      "is_unusual_hour": 0.010479471407506834,
+      "velocity_count_1h": 0.008450671506296362,
+      "velocity_count_24h": 0.006323787327969659,
+      "hour_sin": 0.006240223628547472,
+      "is_pix_out": 0.003696828824113512,
+      "is_pix_in": 0.002192194698458086,
+      "is_crypto_buy": 0.000435990793190956,
+      "is_swap": 2.6281977732778212e-05
+    }
+  }
+}
